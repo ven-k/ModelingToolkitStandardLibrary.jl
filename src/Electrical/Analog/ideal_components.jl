@@ -8,12 +8,14 @@ node.
 
   - `g`
 """
-@component function Ground(; name)
-    @named g = Pin()
-    eqs = [g.v ~ 0]
-    ODESystem(eqs, t, [], []; systems = [g], name = name)
+@model Ground begin
+  @components begin
+      g = Pin()
+  end
+  @equations begin
+      g.v ~ 0
+  end
 end
-
 """
     Resistor(; name, R)
 
@@ -32,14 +34,14 @@ See [OnePort](@ref)
 
   - `R`: [`Ohm`] Resistance
 """
-@component function Resistor(; name, R)
-    @named oneport = OnePort()
-    @unpack v, i = oneport
-    pars = @parameters R = R
-    eqs = [
-        v ~ i * R,
-    ]
-    extend(ODESystem(eqs, t, [], pars; name = name), oneport)
+@model Resistor begin
+  @extend v, i = oneport = OnePort()
+  @parameters begin
+      R = R
+  end
+  @equations begin
+      v ~ i * R
+  end
 end
 
 """
@@ -60,14 +62,14 @@ See [OnePort](@ref)
 
   - `G`: [`S`] Conductance
 """
-@component function Conductor(; name, G)
-    @named oneport = OnePort()
-    @unpack v, i = oneport
-    pars = @parameters G = G
-    eqs = [
-        i ~ v * G,
-    ]
-    extend(ODESystem(eqs, t, [], pars; name = name), oneport)
+@model Conductor begin
+  @extend v, i = oneport = OnePort()
+  @parameters begin
+    G = G
+  end
+  @equations begin
+    i ~ v * G
+  end
 end
 
 """
@@ -89,14 +91,14 @@ Creates an ideal capacitor.
   - `C`: [`F`] Capacitance
   - `v_start`: [`V`] Initial voltage of capacitor
 """
-@component function Capacitor(; name, C, v_start = 0.0)
-    @named oneport = OnePort(; v_start = v_start)
-    @unpack v, i = oneport
-    pars = @parameters C = C
-    eqs = [
-        D(v) ~ i / C,
-    ]
-    extend(ODESystem(eqs, t, [], pars; name = name), oneport)
+@model Capacitor begin
+  @extend v, i = oneport = OnePort(; v_start = v_start)
+  @parameters begin
+      C = C
+  end
+  @equations begin
+      D(v) ~ i / C
+  end
 end
 
 """
@@ -146,13 +148,12 @@ See [TwoPort](@ref)
   - `n1` Negative pin (left port)
   - `n2` Negative pin (right port)
 """
-@component function IdealOpAmp(; name)
-    @named twoport = TwoPort()
-    @unpack v1, v2, i1, i2 = twoport
-
-    eqs = [v1 ~ 0
-        i1 ~ 0]
-    extend(ODESystem(eqs, t, [], [], name = name), twoport)
+@model IdealOpAmp begin
+  @extend v1, v2, i1, i2 = twoport = TwoPort()
+  @equations begin
+    v1 ~ 0
+    i1 ~ 0
+  end
 end
 
 """
@@ -169,11 +170,11 @@ See [OnePort](@ref)
   - `p` Positive pin
   - `n` Negative pin
 """
-@component function Short(; name)
-    @named oneport = OnePort()
-    @unpack v, i = oneport
-    eqs = [v ~ 0]
-    extend(ODESystem(eqs, t, [], []; name = name), oneport)
+@model Short begin
+  @extend v, i = oneport = OnePort()
+  @equations begin
+    v ~ 0
+  end
 end
 
 """
@@ -195,22 +196,30 @@ Temperature dependent electrical resistor
 
   - `R_ref`: [`Ω`] Reference resistance
   - `T_ref`: [K] Reference temperature
-"""
-@component function HeatingResistor(; name, R_ref = 1.0, T_ref = 300.15, alpha = 0)
-    @named oneport = OnePort()
-    @unpack v, i = oneport
-    @named heat_port = HeatPort()
-    pars = @parameters begin
-        R_ref = R_ref
-        T_ref = T_ref
-        alpha = alpha
+"""#=
+@model HeatingResistor begin
+  begin
+    R_ref = 1.0, T_ref = 300.15, alpha = 0
+  end
+    @extend v, i = oneport = OnePort()
+    @components begin
+        heat_port = HeatPort()
     end
-    @variables R(t) = R_ref
-    eqs = [R ~ R_ref * (1 + alpha * (heat_port.T - T_ref))
-        heat_port.Q_flow ~ -v * i # -LossPower
-        v ~ i * R]
-    extend(ODESystem(eqs, t, [R], pars; name = name, systems = [heat_port]), oneport)
+    @parameters begin
+      R_ref = R_ref
+      T_ref = T_ref
+      alpha = alpha
+    end
+    @variables begin
+      R(t) = R_ref
+    end
+    @equations begin
+      R ~ R_ref * (1 + alpha * (heat_port.T - T_ref))
+      heat_port.Q_flow ~ -v * i # -LossPower
+      v ~ i * R
+    end
 end
+=#
 
 """
     EMF(;name, k)
@@ -235,19 +244,29 @@ Electromotoric force (electric/mechanic transformer)
 
   - `k`: [`N⋅m/A`] Transformation coefficient
 """
-@component function EMF(; name, k)
-    @named p = Pin()
-    @named n = Pin()
-    @named flange = Flange()
-    @named support = Support()
-    @parameters k = k
-    @variables v(t)=0.0 i(t)=0.0 phi(t)=0.0 w(t)=0.0
-    eqs = [v ~ p.v - n.v
+@model EMF begin
+  @components begin
+    p = Pin()
+    n = Pin()
+    flange = Flange()
+    support = Support()
+  end
+  @parameters begin
+    k = k
+  end
+  @variables begin
+    v(t) = 0.0
+    i(t) = 0.0
+    phi(t) = 0.0
+    w(t) = 0.0
+  end
+  @equations begin
+    v ~ p.v - n.v
         0 ~ p.i + n.i
         i ~ p.i
         phi ~ flange.phi - support.phi
         D(phi) ~ w
         k * w ~ v
-        flange.tau ~ -k * i]
-    ODESystem(eqs, t, [v, i, phi, w], [k]; name = name, systems = [p, n, flange, support])
+        flange.tau ~ -k * i
+  end
 end

@@ -12,14 +12,14 @@ Output the product of a gain value with the input signal.
   - `input`
   - `output`
 """
-@component function Gain(k; name)
-    @named siso = SISO()
-    @unpack u, y = siso
-    pars = @parameters k=k [description = "Gain of Gain $name"]
-    eqs = [
-        y ~ k * u,
-    ]
-    extend(ODESystem(eqs, t, [], pars; name = name), siso)
+@model Gain begin # (k; name)
+    @extend u, y = siso = SISO()
+    @parameters begin
+        k=k, [description = "Gain of Gain"]
+    end
+    @equations begin
+        y ~ k * u
+    end
 end
 
 """
@@ -36,12 +36,17 @@ Output the product of a gain matrix with the input signal vector.
   - `input`
   - `output`
 """
-@component function MatrixGain(K::AbstractArray; name)
-    nout, nin = size(K, 1), size(K, 2)
-    @named input = RealInput(; nin = nin)
-    @named output = RealOutput(; nout = nout)
-    eqs = [output.u[i] ~ sum(K[i, j] * input.u[j] for j in 1:nin) for i in 1:nout]
-    compose(ODESystem(eqs, t, [], []; name = name), [input, output])
+@model MatrixGain  begin#(K::AbstractArray; name)
+    begin
+        nout, nin = size(K, 1), size(K, 2)
+    end
+    @extend begin
+        input = RealInput(; nin = nin)
+        output = RealOutput(; nout = nout)
+    end
+    @equations begin
+        [output.u[i] ~ sum(K[i, j] * input.u[j] for j in 1:nin) for i in 1:nout]
+    end
 end
 
 """
@@ -58,12 +63,15 @@ Output the sum of the elements of the input port vector.
   - `input`
   - `output`
 """
-@component function Sum(n::Int; name)
-    @named input = RealInput(; nin = n)
-    @named output = RealOutput()
-    eqs = [
-        output.u ~ sum(input.u),
-    ]
+## TODO: compose
+@model Sum begin#(n::Int; name)
+    @extend begin
+        input = RealInput(; nin = n)
+        output = RealOutput()
+    end
+    @equations begin
+        output.u ~ sum(input.u)
+    end
     compose(ODESystem(eqs, t, [], []; name = name), [input, output])
 end
 
@@ -78,14 +86,15 @@ Output difference between reference input (input1) and feedback input (input2).
   - `input2`
   - `output`
 """
-@component function Feedback(; name)
-    @named input1 = RealInput()
-    @named input2 = RealInput()
-    @named output = RealOutput()
-    eqs = [
-        output.u ~ input1.u - input2.u,
-    ]
-    return compose(ODESystem(eqs, t, [], []; name = name), input1, input2, output)
+@model Feedback begin
+    @extend begin
+        input1 = RealInput()
+        input2 = RealInput()
+        output = RealOutput()
+    end
+    @equations begin
+        output.u ~ input1.u - input2.u
+    end
 end
 
 """
@@ -104,16 +113,19 @@ Output the sum of the two scalar inputs.
   - `input2`
   - `output`
 """
-@component function Add(; name, k1 = 1, k2 = 1)
-    @named input1 = RealInput()
-    @named input2 = RealInput()
-    @named output = RealOutput()
-    pars = @parameters(k1=k1, [description = "Gain of Add $name input1"],
-        k2=k2, [description = "Gain of Add $name input2"],)
-    eqs = [
-        output.u ~ k1 * input1.u + k2 * input2.u,
-    ]
-    return compose(ODESystem(eqs, t, [], pars; name = name), input1, input2, output)
+@model Add begin # (; name, k1 = 1, k2 = 1)
+    @extend begin
+        input1 = RealInput()
+        input2 = RealInput()
+        output = RealOutput()
+    end
+    @parameters begin
+        k1=k1, [description = "Gain of Add $name input1"]
+        k2=k2, [description = "Gain of Add $name input2"]
+    end
+    @equations begin
+        output.u ~ k1 * input1.u + k2 * input2.u
+    end
 end
 
 """
@@ -134,7 +146,7 @@ Output the sum of the three scalar inputs.
   - `input3`
   - `output`
 """
-@component function Add3(; name, k1 = 1, k2 = 1, k3 = 1)
+@model Add3(; name, k1 = 1, k2 = 1, k3 = 1)
     @named input1 = RealInput()
     @named input2 = RealInput()
     @named input3 = RealInput()
@@ -159,7 +171,7 @@ Output product of the two inputs.
   - `input2`
   - `output`
 """
-@component function Product(; name)
+@model Product(; name)
     @named input1 = RealInput()
     @named input2 = RealInput()
     @named output = RealOutput()
@@ -180,7 +192,7 @@ Output first input divided by second input.
   - `input2`
   - `output`
 """
-@component function Division(; name)
+@model Division(; name)
     @named input1 = RealInput()
     @named input2 = RealInput(u_start = 1.0) # denominator can not be zero
     @named output = RealOutput()
@@ -202,7 +214,7 @@ If the given function is not composed of simple core methods (e.g. sin, abs, ...
   - `input`
   - `output`
 """
-@component function StaticNonLinearity(func; name)
+@model StaticNonLinearity(func; name)
     @named siso = SISO()
     @unpack u, y = siso
     eqs = [y ~ func(u)]
@@ -319,7 +331,7 @@ Output the arc tangent of the input.
   - `input2`
   - `output`
 """
-@component function Atan2(; name)
+@model Atan2(; name)
     @named input1 = RealInput()
     @named input2 = RealInput()
     @named output = RealOutput()

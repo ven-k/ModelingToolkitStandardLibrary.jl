@@ -222,7 +222,7 @@ end
 =#
 
 """
-    EMF(;name, k)
+    EMF
 
 Electromotoric force (electric/mechanic transformer)
 

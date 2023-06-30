@@ -155,13 +155,12 @@ See [TwoPort](@ref)
   - `n1` Negative pin (left port)
   - `n2` Negative pin (right port)
 """
-@component function IdealOpAmp(; name)
-    @named twoport = TwoPort()
-    @unpack v1, v2, i1, i2 = twoport
-
-    eqs = [v1 ~ 0
-        i1 ~ 0]
-    extend(ODESystem(eqs, t, [], [], name = name), twoport)
+@mtkmodel IdealOpAmp begin
+  @extend v1, v2, i1, i2 = twoport = TwoPort()
+  @equations begin
+    v1 ~ 0
+    i1 ~ 0
+  end
 end
 
 """
@@ -178,11 +177,11 @@ See [OnePort](@ref)
   - `p` Positive pin
   - `n` Negative pin
 """
-@component function Short(; name)
-    @named oneport = OnePort()
-    @unpack v, i = oneport
-    eqs = [v ~ 0]
-    extend(ODESystem(eqs, t, [], []; name = name), oneport)
+@mtkmodel Short begin
+  @extend v, i = oneport = OnePort()
+  @equations begin
+    v ~ 0
+  end
 end
 
 """
@@ -204,23 +203,27 @@ Temperature dependent electrical resistor
 
   - `R_ref`: [`Ω`] Reference resistance
   - `T_ref`: [K] Reference temperature
+  - `alpha`: [K⁻¹] Temperature coefficient of resistance
 """
-@component function HeatingResistor(; name, R_ref = 1.0, T_ref = 300.15, alpha = 0)
-    @named oneport = OnePort()
-    @unpack v, i = oneport
-    @named heat_port = HeatPort()
-    pars = @parameters begin
-        R_ref = R_ref
-        T_ref = T_ref
-        alpha = alpha
+@mtkmodel HeatingResistor begin
+    @extend v, i = oneport = OnePort()
+    @components begin
+        heat_port = HeatPort()
     end
-    @variables R(t) = R_ref
-    eqs = [R ~ R_ref * (1 + alpha * (heat_port.T - T_ref))
-        heat_port.Q_flow ~ -v * i # -LossPower
-        v ~ i * R]
-    extend(ODESystem(eqs, t, [R], pars; name = name, systems = [heat_port]), oneport)
+    @parameters begin
+      R_ref = 1.0
+      T_ref = 300.15
+      alpha = 0
+    end
+    @variables begin
+      R(t) = R_ref
+    end
+    @equations begin
+      R ~ R_ref * (1 + alpha * (heat_port.T - T_ref))
+      heat_port.Q_flow ~ -v * i # -LossPower
+      v ~ i * R
+    end
 end
-
 """
     EMF(; name, k)
 

@@ -91,13 +91,19 @@ The input variable `t` can be changed by passing a different variable as the key
 # Connectors:
 - `output`
 """
-@component function TimeVaryingFunction(f; t = t, name)
-    @named output = RealOutput()
-    eqs = [
-        output.u ~ f(t),
-    ]
-    compose(ODESystem(eqs, Blocks.t; name = name), [output])
+@mtkmodel TimeVaryingFunction begin
+    @parameters begin
+        f
+        _t
+    end
+    @components begin
+        output = RealOutput()
+    end
+    @equations begin
+        output.u ~ first(getdefault(f))(_t)
+    end
 end
+TimeVaryingFunction.f(f; name, _t) = TimeVaryingFunction.f(; f = [f], name, _t)
 
 """
 Generate sine signal.

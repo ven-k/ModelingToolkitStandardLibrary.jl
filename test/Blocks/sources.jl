@@ -28,7 +28,7 @@ end
 @testset "TimeVaryingFunction" begin
     f(t) = t^2 + 1
 
-    @named src = TimeVaryingFunction(f)
+    @named src = TimeVaryingFunction(; f, _t = t)
     @named int = Integrator()
     @named iosys = ODESystem([
             connect(src.output, int.input),
@@ -37,7 +37,7 @@ end
         systems = [int, src])
     sys = structural_simplify(iosys)
 
-    prob = ODEProblem(sys, Pair[int.x => 0.0], (0.0, 10.0))
+    prob = ODEProblem(sys, Pair[], (0.0, 10.0))
 
     sol = solve(prob, Rodas4())
     @test sol.retcode == Success

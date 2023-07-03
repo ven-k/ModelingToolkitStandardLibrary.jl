@@ -6,7 +6,7 @@ Linear 1D force input source
 # Connectors:
 
   - `flange`: 1-dim. translational flange
-  - `f`: real input 
+  - `f`: real input
 """
 @component function Force(; name)
     systems = @named begin
@@ -34,7 +34,7 @@ Linear 1D position input source
 # Connectors:
 
   - `flange`: 1-dim. translational flange
-  - `s`: real input 
+  - `s`: real input
 """
 @component function Position(solves_force = true; s_0 = 0, name)
     systems = @named begin

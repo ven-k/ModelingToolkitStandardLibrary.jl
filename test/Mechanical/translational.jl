@@ -11,7 +11,7 @@ D = Differential(t)
     function System(; name)
         systems = @named begin
             acc = TV.Acceleration(false)
-            a = Constant(k = -10)
+            a = Constant(; k = -10)
             mass = TV.Mass(; m = 100)
             free = TV.Free()
         end
@@ -119,8 +119,8 @@ end
 @testset "sources & sensors" begin
     function System(; name)
         systems = @named begin
-            pos = TV.Position(; s_0 = 0)
-            pos_sensor = TV.PositionSensor(; s_0 = 1)
+            pos = TV.Position(; s = 0)
+            pos_sensor = TV.PositionSensor(; s = 1)
             force = TV.Force()
             force_sensor = TV.ForceSensor()
 

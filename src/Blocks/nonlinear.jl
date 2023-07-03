@@ -56,19 +56,22 @@ If the input is within `u_min` ... `u_max`, the output is zero. Outside of this 
   - `input`
   - `output`
 """
-@component function DeadZone(; name, u_max, u_min = -u_max)
-    if !ModelingToolkit.isvariable(u_max)
-        u_max ≥ u_min || throw(ArgumentError("`u_min` must be smaller than `u_max`"))
+@mtkmodel DeadZone begin
+    @parameters begin
+        u_max, [description = "Upper limit of dead zone of DeadZone"]
+        u_min = -u_max, [description = "Lower limit of dead zone of DeadZone"]
     end
-    @named siso = SISO()
-    @unpack u, y = siso
-    pars = @parameters u_max=u_max [
-        description = "Upper limit of dead zone of DeadZone $name",
-    ] u_min=u_min [description = "Lower limit of dead zone of DeadZone $name"]
-    eqs = [
-        y ~ _dead_zone(u, u_min, u_max),
-    ]
-    extend(ODESystem(eqs, t, [], pars; name = name), siso)
+    begin
+        if !ModelingToolkit.isvariable(u_max)
+            u_max ≥ u_min || throw(ArgumentError("`u_min` must be smaller than `u_max`"))
+        end
+    end
+
+    @extend u, y = siso = SISO()
+
+    @equations begin
+        y ~ _dead_zone(u, u_min, u_max)
+    end
 end
 
 """
@@ -87,19 +90,19 @@ Limits the slew rate of a signal.
   - `input`
   - `output`
 """
-@component function SlewRateLimiter(; name, rising = 1, falling = -rising, Td = 0.001,
-    y_start = 0.0)
-    rising ≥ falling || throw(ArgumentError("`rising` must be smaller than `falling`"))
-    Td > 0 || throw(ArgumentError("Time constant `Td` must be strictly positive"))
-    @named siso = SISO(y_start = y_start)
-    @unpack u, y = siso
-    pars = @parameters rising=rising [
-        description = "Maximum rising slew rate of SlewRateLimiter $name",
-    ] falling=falling [description = "Maximum falling slew rate of SlewRateLimiter $name"] Td=Td [
-        description = "Derivative time constant of SlewRateLimiter $name",
-    ]
-    eqs = [
-        D(y) ~ max(min((u - y) / Td, rising), falling),
-    ]
-    extend(ODESystem(eqs, t, [], pars; name = name), siso)
+@mtkmodel SlewRateLimiter begin
+
+    @parameters begin
+        rising = 1, [description = "Maximum rising slew rate of SlewRateLimiter"]
+        falling = -rising, [description = "Derivative time constant of SlewRateLimiter"]
+        Td = 0.001
+    end
+    begin
+        getdefault(rising) ≥ getdefault(falling) || throw(ArgumentError("`rising` must be smaller than `falling`"))
+        getdefault(Td) > 0 || throw(ArgumentError("Time constant `Td` must be strictly positive"))
+    end
+    @extend u, y = siso = SISO(y = 0.0)
+    @equations begin
+        D(y) ~ max(min((u - y) / Td, rising), falling)
+    end
 end

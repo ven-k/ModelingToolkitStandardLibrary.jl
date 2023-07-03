@@ -73,16 +73,20 @@ Single input single output (SISO) continuous system block.
   - `u_start`: Initial value for the input
   - `y_start`: Initial value for the output
 """
-@component function SISO(; name, u_start = 0.0, y_start = 0.0)
-    @named input = RealInput(u_start = u_start)
-    @named output = RealOutput(u_start = y_start)
-    @variables(u(t)=u_start, [description = "Input of SISO system $name"],
-        y(t)=y_start, [description = "Output of SISO system $name"],)
-    eqs = [u ~ input.u
-        y ~ output.u]
-    return ODESystem(eqs, t, [u, y], []; name = name, systems = [input, output])
+@mtkmodel SISO begin
+    @variables begin
+        u(t) = 0.0, [description = "Input of SISO system"]
+        y(t) = 0.0, [description = "Output of SISO system"]
+    end
+    @components begin
+        input = RealInput(u_start = u)
+        output = RealOutput(u_start = y)
+    end
+    @equations begin
+        u ~ input.u
+        y ~ output.u
+    end
 end
-
 """
     MIMO(;name, nin=1, nout=1, u_start=zeros(nin), y_start=zeros(nout))
 

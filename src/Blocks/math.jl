@@ -15,7 +15,7 @@ Output the product of a gain value with the input signal.
 @mtkmodel Gain begin
     @extend u, y = siso = SISO()
     @parameters begin
-        k, [description = "Gain function"]
+        k, [description = "Gain"]
     end
     @equations begin
         y ~ k * u
@@ -37,13 +37,23 @@ Output the product of a gain matrix with the input signal vector.
   - `input`
   - `output`
 """
-@component function MatrixGain(K::AbstractArray; name)
-    nout, nin = size(K, 1), size(K, 2)
-    @named input = RealInput(; nin = nin)
-    @named output = RealOutput(; nout = nout)
-    eqs = [output.u[i] ~ sum(K[i, j] * input.u[j] for j in 1:nin) for i in 1:nout]
-    compose(ODESystem(eqs, t, [], []; name = name), [input, output])
+@mtkmodel MatrixGain begin
+    @parameters begin
+        K
+    end
+    begin
+        nout = size(getdefault(K), 1)
+        nin = size(getdefault(K), 2)
+    end
+    @components begin
+        input = RealInput(; nin = size(K, 2))
+        output = RealOutput(; nout = size(K, 1))
+    end
+    @equations begin
+        [(@info i, j; output.u[i] ~ sum(getdefault(K)[i, j] * input.u[j])) for j in 1:nin for i in 1:nout]...
+    end
 end
+MatrixGain.f(K; name) = MatrixGain.f(; name, K)
 
 """
     Sum(n::Int; name)
@@ -59,14 +69,19 @@ Output the sum of the elements of the input port vector.
   - `input`
   - `output`
 """
-@component function Sum(n::Int; name)
-    @named input = RealInput(; nin = n)
-    @named output = RealOutput()
-    eqs = [
-        output.u ~ sum(input.u),
-    ]
-    compose(ODESystem(eqs, t, [], []; name = name), [input, output])
+@mtkmodel Sum begin
+    @parameters begin
+        n
+    end
+    @components begin
+        input = RealInput(; nin = n)
+        output = RealOutput()
+    end
+    @equations begin
+        output.u ~ sum(input.u)
+    end
 end
+Sum.f(n; name) = Sum.f(; n, name)
 
 """
     Feedback(;name)
@@ -91,7 +106,7 @@ Output difference between reference input (input1) and feedback input (input2).
 end
 
 """
-    Add(;name, k1=1, k2=1)
+    Add(; name, k1 = 1, k2 = 1)
 
 Output the sum of the two scalar inputs.
 
@@ -106,20 +121,23 @@ Output the sum of the two scalar inputs.
   - `input2`
   - `output`
 """
-@component function Add(; name, k1 = 1, k2 = 1)
-    @named input1 = RealInput()
-    @named input2 = RealInput()
-    @named output = RealOutput()
-    pars = @parameters(k1=k1, [description = "Gain of Add $name input1"],
-        k2=k2, [description = "Gain of Add $name input2"],)
-    eqs = [
-        output.u ~ k1 * input1.u + k2 * input2.u,
-    ]
-    return compose(ODESystem(eqs, t, [], pars; name = name), input1, input2, output)
+@mtkmodel Add begin
+    @components begin
+        input1 = RealInput()
+        input2 = RealInput()
+        output = RealOutput()
+    end
+    @parameters begin
+        k1 = 1, [description = "Gain of Add input1"]
+        k2 = 1, [description = "Gain of Add input2"]
+    end
+    @equations begin
+        output.u ~ k1 * input1.u + k2 * input2.u
+    end
 end
 
 """
-    Add(;name, k1=1, k2=1,k3=1)
+    Add(; name, k1 = 1, k2 = 1,k3 = 1)
 
 Output the sum of the three scalar inputs.
 
@@ -136,22 +154,25 @@ Output the sum of the three scalar inputs.
   - `input3`
   - `output`
 """
-@component function Add3(; name, k1 = 1, k2 = 1, k3 = 1)
-    @named input1 = RealInput()
-    @named input2 = RealInput()
-    @named input3 = RealInput()
-    @named output = RealOutput()
-    pars = @parameters(k1=k1, [description = "Gain of Add $name input1"],
-        k2=k2, [description = "Gain of Add $name input2"],
-        k3=k3, [description = "Gain of Add $name input3"],)
-    eqs = [
-        output.u ~ k1 * input1.u + k2 * input2.u + k3 * input3.u,
-    ]
-    return compose(ODESystem(eqs, t, [], pars; name = name), input1, input2, input3, output)
+@mtkmodel Add3 begin
+    @components begin
+        input1 = RealInput()
+        input2 = RealInput()
+        input3 = RealInput()
+        output = RealOutput()
+    end
+    @parameters begin
+        k1 = 1, [description = "Gain of Add input1"]
+        k2 = 1, [description = "Gain of Add input2"]
+        k3 = 1, [description = "Gain of Add input3"]
+    end
+    @equations begin
+        output.u ~ k1 * input1.u + k2 * input2.u + k3 * input3.u
+    end
 end
 
 """
-    Product(;name)
+    Product(; name)
 
 Output product of the two inputs.
 
@@ -161,18 +182,19 @@ Output product of the two inputs.
   - `input2`
   - `output`
 """
-@component function Product(; name)
-    @named input1 = RealInput()
-    @named input2 = RealInput()
-    @named output = RealOutput()
-    eqs = [
-        output.u ~ input1.u * input2.u,
-    ]
-    return compose(ODESystem(eqs, t, [], []; name = name), input1, input2, output)
+@mtkmodel Product begin
+    @components begin
+        input1 = RealInput()
+        input2 = RealInput()
+        output = RealOutput()
+    end
+    @equations begin
+        output.u ~ input1.u * input2.u
+    end
 end
 
 """
-    Division(;name)
+    Division(; name)
 
 Output first input divided by second input.
 
@@ -182,14 +204,15 @@ Output first input divided by second input.
   - `input2`
   - `output`
 """
-@component function Division(; name)
-    @named input1 = RealInput()
-    @named input2 = RealInput(u_start = 1.0) # denominator can not be zero
-    @named output = RealOutput()
-    eqs = [
-        output.u ~ input1.u / input2.u,
-    ]
-    return compose(ODESystem(eqs, t, [], []; name = name), input1, input2, output)
+@mtkmodel Division begin
+    @components begin
+        input1 = RealInput()
+        input2 = RealInput(u_start = 1.0) # denominator can not be zero
+        output = RealOutput()
+    end
+    @equations begin
+        output.u ~ input1.u / input2.u
+    end
 end
 
 """
@@ -204,12 +227,16 @@ If the given function is not composed of simple core methods (e.g. sin, abs, ...
   - `input`
   - `output`
 """
-@component function StaticNonLinearity(func; name)
-    @named siso = SISO()
-    @unpack u, y = siso
-    eqs = [y ~ func(u)]
-    extend(ODESystem(eqs, t, [], []; name = name), siso)
+@mtkmodel StaticNonLinearity begin
+    @parameters begin
+        func
+    end
+    @extend u, y = siso = SISO()
+    @equations begin
+        y ~ first(getdefault(func))(u)
+    end
 end
+StaticNonLinearity.f(func ; name) = StaticNonLinearity.f(; func = [func], name)
 
 """
     Abs(;name)
@@ -321,14 +348,15 @@ Output the arc tangent of the input.
   - `input2`
   - `output`
 """
-@component function Atan2(; name)
-    @named input1 = RealInput()
-    @named input2 = RealInput()
-    @named output = RealOutput()
-    eqs = [
-        output.u ~ atan(input1.u, input2.u),
-    ]
-    compose(ODESystem(eqs, t, [], []; name = name), [input1, input2, output])
+@mtkmodel Atan2 begin
+    @components begin
+        input1 = RealInput()
+        input2 = RealInput()
+        output = RealOutput()
+    end
+    @equations begin
+        output.u ~ atan(input1.u, input2.u)
+    end
 end
 
 """

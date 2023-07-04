@@ -61,10 +61,10 @@ Current `i1` flows from `p1` to `n1` and `i2` from `p2` to `n2`.
 - `i2(t)`: [`A`] The current passing through positive pin `p2`
 
 # Parameters:
-- `v1_start`: [`V`] Initial voltage across p1 and n1
-- `v2_start`: [`V`] Initial voltage across p2 and n2
-- `i2_start`: [`A`] Initial current through p1
-- `i2_start`: [`A`] Initial current through p2
+- `v1`: [`V`] Initial voltage across p1 and n1
+- `v2`: [`V`] Initial voltage across p2 and n2
+- `i2`: [`A`] Initial current through p1
+- `i2`: [`A`] Initial current through p2
 
 # Connectors:
 - `p1` First positive pin
@@ -73,25 +73,27 @@ Current `i1` flows from `p1` to `n1` and `i2` from `p2` to `n2`.
 - `n2` Second Negative pin
 """
 
-@component function TwoPort(; name, v1_start = 0.0, v2_start = 0.0, i1_start = 0.0,
-    i2_start = 0.0)
-    @named p1 = Pin()
-    @named n1 = Pin()
-    @named p2 = Pin()
-    @named n2 = Pin()
-    sts = @variables begin
-        v1(t) = v1_start
-        i1(t) = i1_start
-        v2(t) = v2_start
-        i2(t) = i2_start
+@mtkmodel TwoPort begin
+    @components begin
+        p1 = Pin()
+        n1 = Pin()
+        p2 = Pin()
+        n2 = Pin()
     end
-    eqs = [v1 ~ p1.v - n1.v
+    @variables begin
+        v1(t) # = v1_start
+        i1(t) # = i1_start
+        v2(t) # = v2_start
+        i2(t) # = i2_start
+    end
+    @equations begin
+        v1 ~ p1.v - n1.v
         0 ~ p1.i + n1.i
         i1 ~ p1.i
         v2 ~ p2.v - n2.v
         0 ~ p2.i + n2.i
-        i2 ~ p2.i]
-    return compose(ODESystem(eqs, t, sts, []; name = name), p1, p2, n1, n2)
+        i2 ~ p2.i
+    end
 end
 
 @connector function DigitalPin(; name)

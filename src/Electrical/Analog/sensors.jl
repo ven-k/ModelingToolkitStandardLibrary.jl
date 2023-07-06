@@ -14,15 +14,15 @@ an ideal ammeter.
   - `n` Negative pin
 """
 @mtkmodel CurrentSensor begin
-  @components begin
-    p = Pin()
-    n = Pin()
-  end
+    @components begin
+        p = Pin()
+        n = Pin()
+    end
     @variables begin
-      i(t)
+        i(t)
     end
     @equations begin
-      p.v ~ n.v
+        p.v ~ n.v
         i ~ p.i
         i ~ -n.i
     end
@@ -36,16 +36,17 @@ Creates a circuit component which measures the potential at a pin.
 # States:
 
   - `phi(t)`: [`V`] The measured potential at this point
+
 # Connectors:
 
   - `p` Pin at which potential is to be measured
 """
 @mtkmodel PotentialSensor begin
-  @components begin
-    p = Pin()
-  end
+    @components begin
+        p = Pin()
+    end
     @variables begin
-      phi(t)
+        phi(t)
     end
     @equations begin
         p.i ~ 0
@@ -68,18 +69,18 @@ Creates a circuit component that measures the voltage across it. Analogous to an
   - `n` Negative pin
 """
 @mtkmodel VoltageSensor begin
-  @components begin
-    p = Pin()
-    n = Pin()
-  end
-  @variables begin
-    v(t)
-  end
-  @equations begin
-    p.i ~ 0
-    n.i ~ 0
-    v ~ p.v - n.v
-  end
+    @components begin
+        p = Pin()
+        n = Pin()
+    end
+    @variables begin
+        v(t)
+    end
+    @equations begin
+        p.i ~ 0
+        n.i ~ 0
+        v ~ p.v - n.v
+    end
 end
 
 """
@@ -102,24 +103,24 @@ consumed by a circuit.
   - `nv` Corresponds to the `n` pin of the [`VoltageSensor`](@ref)
 """
 @mtkmodel PowerSensor begin
-  @components begin
-    pc = Pin()
-    nc = Pin()
-    pv = Pin()
-    nv = Pin()
-    voltage_sensor = VoltageSensor()
-    current_sensor = CurrentSensor()
-  end
-  @variables begin
-    power(t)
-  end
-  @equations begin
-    connect(voltage_sensor.p, pv)
-    connect(voltage_sensor.n, nv)
-    connect(current_sensor.p, pc)
-    connect(current_sensor.n, nc)
-    power ~ current_sensor.i * voltage_sensor.v
-  end
+    @components begin
+        pc = Pin()
+        nc = Pin()
+        pv = Pin()
+        nv = Pin()
+        voltage_sensor = VoltageSensor()
+        current_sensor = CurrentSensor()
+    end
+    @variables begin
+        power(t)
+    end
+    @equations begin
+        connect(voltage_sensor.p, pv)
+        connect(voltage_sensor.n, nv)
+        connect(current_sensor.p, pc)
+        connect(current_sensor.n, nc)
+        power ~ current_sensor.i * voltage_sensor.v
+    end
 end
 
 """
@@ -140,24 +141,24 @@ Combines a [`VoltageSensor`](@ref) and a [`CurrentSensor`](@ref).
   - `nv` Corresponds to the `n` pin of the [`VoltageSensor`](@ref)
 """
 @mtkmodel MultiSensor begin
-  @components begin
-    pc = Pin()
-    nc = Pin()
-    pv = Pin()
-    nv = Pin()
-    voltage_sensor = VoltageSensor()
-    current_sensor = CurrentSensor()
-  end
-  @variables begin
-        i(t)
-        v(t)
-  end
-  @equations begin
-      connect(voltage_sensor.p, pv)
+    @components begin
+        pc = Pin()
+        nc = Pin()
+        pv = Pin()
+        nv = Pin()
+        voltage_sensor = VoltageSensor()
+        current_sensor = CurrentSensor()
+    end
+    @variables begin
+        i(t) = 1.0
+        v(t) = 1.0
+    end
+    @equations begin
+        connect(voltage_sensor.p, pv)
         connect(voltage_sensor.n, nv)
         connect(current_sensor.p, pc)
         connect(current_sensor.n, nc)
         i ~ current_sensor.i
         v ~ voltage_sensor.v
-  end
+    end
 end

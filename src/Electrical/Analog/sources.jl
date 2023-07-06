@@ -1,5 +1,5 @@
 """
-    Voltage(;name)
+    Voltage(; name)
 
 Acts as an ideal voltage source with no internal resistance.
 
@@ -24,7 +24,7 @@ See [OnePort](@ref)
 end
 
 """
-    Current(;name)
+    Current(; name)
 
 Acts as an ideal current source with no internal resistance.
 

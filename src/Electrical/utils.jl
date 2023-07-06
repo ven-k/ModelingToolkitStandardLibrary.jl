@@ -95,6 +95,14 @@ Current `i1` flows from `p1` to `n1` and `i2` from `p2` to `n2`.
         i2 ~ p2.i
     end
 end
+function TwoPort.f(; name, v1_start, v2_start, i1_start, i2_start)
+    TwoPort.f(;
+        name = name,
+        v1 = v1_start,
+        v2 = v2_start,
+        i1 = i1_start,
+        i2 = i2_start)
+end
 
 @connector function DigitalPin(; name)
     @variables val(t) v(t) i(t)

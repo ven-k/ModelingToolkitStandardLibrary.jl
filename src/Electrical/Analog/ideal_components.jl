@@ -38,7 +38,7 @@ See [OnePort](@ref)
 @mtkmodel Resistor begin
     @extend v, i = oneport = OnePort()
     @parameters begin
-        R
+        R, [description = "Resistance", unit = u"Ω"]
     end
     @equations begin
         v ~ i * R
@@ -94,16 +94,14 @@ Creates an ideal capacitor.
 """
 @mtkmodel Capacitor begin
     @parameters begin
-      C
+        C, [description = "Capacitance", unit = "F"]
     end
-    @variables begin
-      v
-    end
-    @extend v, i = oneport = OnePort(; v = v)
+    @extend v, i = oneport = OnePort(; v = 0.0)
     @equations begin
         D(v) ~ i / C
     end
 end
+Capacitor.f(; name, C, v_start) = Capacitor.f(; name = name, C = C, oneport.v = v_start)
 
 """
     Inductor(; name, L, i_start)
@@ -122,20 +120,18 @@ See [OnePort](@ref)
 # Parameters:
 
   - `L`: [`H`] Inductance
-  - `i`: [`A`] Initial current through inductor
+  - `i_start`: [`A`] Initial current through inductor
 """
 @mtkmodel Inductor begin # name, L, i_start = 0.0)
     @parameters begin
-      L
+        L, [description = "Inductance", unit = "H"]
     end
-    @variables begin
-      i
-    end
-    @extend v, i = oneport = OnePort(; i = i)
+    @extend v, i = oneport = OnePort(; i = 0.0)
     @equations begin
         D(i) ~ 1 / L * v
     end
 end
+Inductor.f(; name, L, i_start) = Inductor.f(; name = name, L = L, oneport.i = i_start)
 
 """
     IdealOpAmp(; name)
@@ -156,11 +152,11 @@ See [TwoPort](@ref)
   - `n2` Negative pin (right port)
 """
 @mtkmodel IdealOpAmp begin
-  @extend v1, v2, i1, i2 = twoport = TwoPort()
-  @equations begin
-    v1 ~ 0
-    i1 ~ 0
-  end
+    @extend v1, v2, i1, i2 = twoport = TwoPort()
+    @equations begin
+        v1 ~ 0
+        i1 ~ 0
+    end
 end
 
 """
@@ -178,10 +174,10 @@ See [OnePort](@ref)
   - `n` Negative pin
 """
 @mtkmodel Short begin
-  @extend v, i = oneport = OnePort()
-  @equations begin
-    v ~ 0
-  end
+    @extend v, i = oneport = OnePort()
+    @equations begin
+        v ~ 0
+    end
 end
 
 """
@@ -211,17 +207,17 @@ Temperature dependent electrical resistor
         heat_port = HeatPort()
     end
     @parameters begin
-      R_ref = 1.0
-      T_ref = 300.15
-      alpha = 0
+        R_ref = 1.0, [description = "Reference resistance", unit = u"Ω"]
+        T_ref = 300.15, [description = "Reference temperature", unit = u"K"]
+        alpha = 0, [description = "Temperature coefficient of resistance", unit = u"K⁻¹"]
     end
     @variables begin
-      R(t) = R_ref
+        R(t) = R_ref
     end
     @equations begin
-      R ~ R_ref * (1 + alpha * (heat_port.T - T_ref))
-      heat_port.Q_flow ~ -v * i # -LossPower
-      v ~ i * R
+        R ~ R_ref * (1 + alpha * (heat_port.T - T_ref))
+        heat_port.Q_flow ~ -v * i # -LossPower
+        v ~ i * R
     end
 end
 """
@@ -255,7 +251,7 @@ Electromotoric force (electric/mechanic transformer)
         support = Support()
     end
     @parameters begin
-        k
+        k, [description = "Transformation coefficient", unit = u"N⋅m/A"]
     end
     @variables begin
         v(t) = 0.0

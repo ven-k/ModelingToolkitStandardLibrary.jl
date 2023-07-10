@@ -101,7 +101,7 @@ Creates an ideal capacitor.
         D(v) ~ i / C
     end
 end
-Capacitor.f(; name, C, v_start) = Capacitor.f(; name = name, C = C, oneport.v = v_start)
+Capacitor.f(; name, C, v_start) = Capacitor.f(; name = name, C = C, oneport__v = v_start)
 
 """
     Inductor(; name, L, i_start)
@@ -131,7 +131,7 @@ See [OnePort](@ref)
         D(i) ~ 1 / L * v
     end
 end
-Inductor.f(; name, L, i_start) = Inductor.f(; name = name, L = L, oneport.i = i_start)
+Inductor.f(; name, L, i_start) = Inductor.f(; name = name, L = L, oneport__i = i_start)
 
 """
     IdealOpAmp(; name)

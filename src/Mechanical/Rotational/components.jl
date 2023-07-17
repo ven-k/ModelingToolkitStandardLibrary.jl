@@ -199,7 +199,7 @@ This element characterizes any type of gear box which is fixed in the ground and
   - `ratio`: Transmission ratio (flange_a.phi/flange_b.phi)
   - `use_support`: If support flange enabled, otherwise implicitly grounded
 """
-@mtkmodel IdealGear begin#(; name, ratio, use_support = false)
+@mtkmodel IdealGear begin
     @parameters begin
         use_support
     end

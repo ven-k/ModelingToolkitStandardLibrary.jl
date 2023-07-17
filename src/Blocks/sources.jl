@@ -59,6 +59,8 @@ function triangular(x, f, amplitude, offset, start_time)
 end
 
 """
+    Constant(; name, k = 0.0)
+
 Generate constant signal.
 
 # Parameters:
@@ -74,7 +76,7 @@ Generate constant signal.
         output = RealOutput()
     end
     @parameters begin
-        k, [description = "Constant output value of block $name"]
+        k = 0.0, [description = "Constant output value of block"]
     end
     @equations begin
         output.u ~ k
@@ -82,7 +84,7 @@ Generate constant signal.
 end
 
 """
-    TimeVaryingFunction(f; t=t, name)
+    TimeVaryingFunction(f; name)
 
 Outputs ``f(t)``.
 
@@ -91,15 +93,23 @@ The input variable `t` can be changed by passing a different variable as the key
 # Connectors:
 - `output`
 """
-@component function TimeVaryingFunction(f; t = t, name)
-    @named output = RealOutput()
-    eqs = [
-        output.u ~ f(t),
-    ]
-    compose(ODESystem(eqs, Blocks.t; name = name), [output])
+@mtkmodel TimeVaryingFunction begin
+    @parameters begin
+        f
+    end
+    @components begin
+        output = RealOutput()
+    end
+    @equations begin
+        output.u ~ first(getdefault(f))(t)
+    end
 end
+TimeVaryingFunction.f(f; name) = TimeVaryingFunction.f(; f = [f], name)
 
 """
+    Sine(; name, frequency, amplitude = 1, phase = 0, offset = 0, start_time = 0,
+    smooth = false)
+
 Generate sine signal.
 
 # Parameters:
@@ -141,7 +151,10 @@ Generate sine signal.
 end
 
 """
-Generate cosine signal.
+    Cosine(; name, frequency, amplitude = 1, phase = 0, offset = 0, start_time = 0,
+    smooth = false)
+
+Cosine signal.
 
 # Parameters:
 - `frequency`: [Hz] Frequency of sine wave
@@ -180,6 +193,8 @@ Generate cosine signal.
 end
 
 """
+    ContinuousClock(; name, offset = 0, start_time = 0)
+
 Generate current time signal.
 
 # Parameters:
@@ -202,6 +217,8 @@ Generate current time signal.
 end
 
 """
+Ramp(; name, height = 1, duration = 1, offset = 0, start_time = 0, smooth = false)
+
 Generate ramp signal.
 
 # Parameters:
@@ -242,6 +259,8 @@ Generate ramp signal.
 end
 
 """
+    Square(; name, frequency = 1.0, amplitude = 1.0, offset = 0.0, start_time = 0.0,
+    smooth = false)
 Generate smooth square signal.
 
 # Parameters:
@@ -324,7 +343,9 @@ Generate step signal.
 end
 
 """
-Generate exponentially damped sine signal.
+    ExpSine(; name, frequency, amplitude = 1, damping = 0.1, phase = 0, offset = 0, start_time = 0, smooth = false)
+
+Exponentially damped sine signal.
 
 # Parameters:
 
@@ -370,6 +391,9 @@ Generate exponentially damped sine signal.
 end
 
 """
+    Triangular(; name, amplitude = 1.0, frequency = 1.0, offset = 0.0,
+    start_time = 0.0, smooth = false)
+
 Generate smooth triangular signal for frequencies less than or equal to 25 Hz
 
 # Parameters:

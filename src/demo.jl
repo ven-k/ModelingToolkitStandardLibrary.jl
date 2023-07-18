@@ -52,7 +52,7 @@ tau_L_step = -0.3 # [N.m] amplitude of the load torque step
 @named pi_controller = Blocks.LimPI(k = 1.1, T = 0.035, u_max = 10, Ta = 0.035)
 @named feedback = Blocks.Feedback()
 @named R1 = Resistor(R = R)
-@named L1 = Inductor(L = L)
+@named L1 = Inductor(L = L, i_start = 0.0)
 @named emf = EMF(k = k)
 @named fixed = Fixed()
 @named load = Torque(use_support = false)

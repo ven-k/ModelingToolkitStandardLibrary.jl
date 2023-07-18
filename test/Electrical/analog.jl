@@ -13,7 +13,7 @@ using OrdinaryDiffEq: ReturnCode.Success
     @named source = Sine(offset = 1, amplitude = 10, frequency = 5)
     @named voltage = Voltage()
     @named resistor = Resistor(R = 1)
-    @named capacitor = Capacitor(C = 1, v = 0.0)
+    @named capacitor = Capacitor(C = 1, v_start = 0.0)
     @named ground = Ground()
 
     @named voltage_sensor = VoltageSensor()
@@ -89,7 +89,7 @@ end
     @named source = Constant(k = 10)
     @named voltage = Voltage()
     @named resistor = Resistor(R = 1)
-    @named capacitor = Capacitor(C = 1, v = 0.0)
+    @named capacitor = Capacitor(C = 1, v_start = 0.0)
     @named ground = Ground()
 
     connections = [connect(source.output, voltage.V)
@@ -113,7 +113,7 @@ end
     @named source = Constant(k = 10)
     @named voltage = Voltage()
     @named resistor = Resistor(R = 1)
-    @named inductor = Inductor(L = 1.0, i = 0.0)
+    @named inductor = Inductor(L = 1.0, i_start = 0.0)
     @named ground = Ground()
 
     connections = [connect(source.output, voltage.V)
@@ -175,7 +175,7 @@ end
     @named current = Current()
     @named source = Step(start_time = 2)
     @named resistor = Resistor(R = 1)
-    @named capacitor = Capacitor(C = 1, v = 0.0)
+    @named capacitor = Capacitor(C = 1, v_start = 0.0)
     @named ground = Ground()
 
     connections = [connect(source.output, current.I)
@@ -247,7 +247,7 @@ _damped_sine_wave(x, f, A, st, ϕ, d) = exp((st - x) * d) * A * sin(2 * π * f *
     st, o, h, f, A, et, ϕ, d, δ = 0.7, 1.25, 3, 2, 2.5, 2, π / 4, 0.1, 0.0001
 
     @named res = Resistor(R = 1)
-    @named cap = Capacitor(C = 1, v = 0.0)
+    @named cap = Capacitor(C = 1, v_start = 0.0)
     @named ground = Ground()
     @named voltage = Voltage()
     @named voltage_sensor = VoltageSensor()
@@ -311,7 +311,7 @@ end
 
     @named ground = Ground()
     @named res = Resistor(R = 1.0)
-    @named cap = Capacitor(C = 1, v = 0.0)
+    @named cap = Capacitor(C = 1, v_start = 0.0)
     @named current_sensor = CurrentSensor()
     @named current = Current()
     @named step = Step(start_time = st, offset = o, height = h)

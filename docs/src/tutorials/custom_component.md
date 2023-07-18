@@ -27,7 +27,7 @@ model NonlinearResistor "Chua's resistor"
   parameter SI.Conductance Ga "conductance in inner voltage range";
   parameter SI.Conductance Gb "conductance in outer voltage range";
   parameter SI.Voltage Ve "inner voltage range limit";
-equation 
+equation
   i = if (v < -Ve) then Gb*(v + Ve) - Ga*Ve else if (v > Ve) then Gb*(v - Ve) + Ga*Ve else Ga*v;
 end NonlinearResistor;
 ```
@@ -95,7 +95,7 @@ The final model can now be created with the components from the library and the 
 @named Ro = Resistor(R = 12.5e-3)
 @named G = Conductor(G = 0.565)
 @named C1 = Capacitor(C = 10, v_start = 4)
-@named C2 = Capacitor(C = 100)
+@named C2 = Capacitor(C = 100, v_start = 0.0)
 @named Nr = NonlinearResistor(Ga = -0.757576,
     Gb = -0.409091,
     Ve = 1)

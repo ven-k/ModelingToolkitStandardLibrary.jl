@@ -95,13 +95,13 @@ Creates an ideal capacitor.
 @mtkmodel Capacitor begin
     @parameters begin
         C, [description = "Capacitance", unit = "F"]
+        v_start
     end
-    @extend v, i = oneport = OnePort(; v = 0.0)
+    @extend v, i = oneport = OnePort(; v = v_start)
     @equations begin
         D(v) ~ i / C
     end
 end
-Capacitor.f(; name, C, v_start) = Capacitor.f(; name = name, C = C, oneport__v = v_start)
 
 """
     Inductor(; name, L, i_start)
@@ -122,16 +122,16 @@ See [OnePort](@ref)
   - `L`: [`H`] Inductance
   - `i_start`: [`A`] Initial current through inductor
 """
-@mtkmodel Inductor begin # name, L, i_start = 0.0)
+@mtkmodel Inductor begin
     @parameters begin
         L, [description = "Inductance", unit = "H"]
+        i_start
     end
-    @extend v, i = oneport = OnePort(; i = 0.0)
+    @extend v, i = oneport = OnePort(; i = i_start)
     @equations begin
         D(i) ~ 1 / L * v
     end
 end
-Inductor.f(; name, L, i_start) = Inductor.f(; name = name, L = L, oneport__i = i_start)
 
 """
     IdealOpAmp(; name)

@@ -85,7 +85,7 @@ end
     @named fv = TV.Force()
     @named fp = TP.Force(use_support = false)
 
-    @named source = Sine(frequency = 3, amplitude = 2)
+    @named source = Sine(frequency = 3, amplitude = 2, output__unit = u"N")
 
     function System(damping, spring, body, ground, f, source)
         eqs = [connect(f.f, source.output)

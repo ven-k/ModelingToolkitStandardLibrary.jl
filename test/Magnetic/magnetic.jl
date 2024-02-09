@@ -1,13 +1,12 @@
-using ModelingToolkitStandardLibrary.Magnetic, ModelingToolkit, OrdinaryDiffEq, Test
-
 import ModelingToolkitStandardLibrary.Electrical
 import ModelingToolkitStandardLibrary.Blocks
 import ModelingToolkitStandardLibrary.Magnetic
 using ModelingToolkit, OrdinaryDiffEq, Test
 using OrdinaryDiffEq: ReturnCode.Success
+using DynamicQuantities: @u_str
 # using Plots
 
-@parameters t
+@parameters t [unit = u"s"]
 
 @testset "Inductor" begin
     mu_air = 1
@@ -16,7 +15,8 @@ using OrdinaryDiffEq: ReturnCode.Success
     l_Fe = 4 * 0.065
     a = b = 0.25
 
-    @named source = Blocks.Sine(amplitude = 230 * sqrt(2), frequency = 50, phase = pi / 2)
+    @named source = Blocks.Sine(amplitude = 230 * sqrt(2), frequency = 50, phase = pi / 2,
+        output__unit = u"V")
     @named voltage = Electrical.Voltage()
     @named r = Electrical.Resistor(R = 7.5)
     @named ground = Electrical.Ground()

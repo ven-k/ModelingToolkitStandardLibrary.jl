@@ -57,7 +57,7 @@ end
     @variables begin
         phi(t) = 0.0, [description = "Absolute rotation angle", unit = u"rad"]
         w(t) = 0.0, [description = "Absolute angular velocity", unit = u"rad*s^-1"]
-        a(t) = 0.0, [description = "Absolute angular acceleration", rad = u"rad*s^-2"]
+        a(t) = 0.0, [description = "Absolute angular acceleration", unit = u"rad*s^-2"]
     end
     @equations begin
         phi ~ flange_a.phi
@@ -94,7 +94,7 @@ Linear 1D rotational spring
         @symcheck c > 0 || throw(ArgumentError("Expected `c` to be positive"))
     end
     @parameters begin
-        c, [description = "Spring constant", unit = u"N*m*rad^-1"]
+        c, [description = "Spring constant", unit = u"N*m"]
         phi_rel0 = 0.0, [description = "Unstretched spring angle", unit = u"rad"]
     end
     @equations begin
@@ -165,9 +165,9 @@ Linear 1D rotational spring and damper
         tau_d(t), [description = "Damper torque", unit = u"N*m"]
     end
     @parameters begin
-        d, [description = "Damping constant"]
-        c, [description = "Spring constant"]
-        phi_rel0 = 0.0, [description = "Unstretched spring angle"]
+        d, [description = "Damping constant", unit = u"N*m*s/rad"]
+        c, [description = "Spring constant", unit = u"N*m/rad"]
+        phi_rel0 = 0.0, [description = "Unstretched spring angle", unit = u"rad"]
     end
     @equations begin
         tau_c ~ c * (phi_rel - phi_rel0)
@@ -197,25 +197,16 @@ This element characterizes any type of gear box which is fixed in the ground and
 # Parameters:
 
   - `ratio`: Transmission ratio (flange_a.phi/flange_b.phi)
-  - `use_support`: If support flange enabled, otherwise implicitly grounded
+  - `use_support`: If support flange enabled, otherwise implicitly grounded. By default, this is `false`.
 """
-@mtkmodel IdealGear begin#(; name, ratio, use_support = false)
-    @parameters begin
-        use_support
-    end
-    @extend phi_support, flange_a, flange_b = partial_element = PartialElementaryTwoFlangesAndSupport2(use_support = use_support)
+@mtkmodel IdealGear begin
+    @extend phi_support, flange_a, flange_b = partial_element = PartialElementaryTwoFlangesAndSupport2(; use_support = false)
     @parameters begin
         ratio, [description = "Transmission ratio"]
     end
     @variables begin
-        function phi_a(t)
-            0.0,
-            [description = "Relative angle between shaft a and the support", unit = u"rad"]
-        end
-        function phi_b(t)
-            0.0,
-            [description = "Relative angle between shaft b and the support", unit = u"rad"]
-        end
+        phi_a(t) = 0.0, [description = "Relative angle between shaft a and the support", unit = u"rad"]
+        phi_b(t) = 0.0, [description = "Relative angle between shaft b and the support", unit = u"rad"]
     end
     @equations begin
         phi_a ~ flange_a.phi - phi_support
@@ -258,7 +249,7 @@ Friction model: "Armstrong, B. and C.C. de Wit, Friction Modeling and Compensati
         f, [description = "Viscous friction coefficient", unit = u"N*m*s/rad"]
         tau_c, [description = "Coulomb friction torque", unit = u"N*m"]
         w_brk, [description = "Breakaway friction velocity", unit = u"rad*s^-1"]
-        tau_brk, [description = "Breakaway friction torque", unit = "N*m"]
+        tau_brk, [description = "Breakaway friction torque", unit = u"N*m"]
     end
     begin
         str_scale = sqrt(2 * exp(1)) * (tau_brk - tau_c)

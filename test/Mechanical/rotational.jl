@@ -3,10 +3,12 @@ using ModelingToolkitStandardLibrary.Mechanical.Rotational,
     Test
 import ModelingToolkitStandardLibrary.Blocks
 using OrdinaryDiffEq: ReturnCode.Success
+using DynamicQuantities: @u_str
+import ModelingToolkitStandardLibrary: rad
 
 # using Plots
 
-@parameters t
+@parameters t [unit = u"s"]
 D = Differential(t)
 
 @testset "two inertias" begin
@@ -32,7 +34,7 @@ D = Differential(t)
     sol = solve(prob, Rodas4())
     @test SciMLBase.successful_retcode(sol)
 
-    prob = DAEProblem(sys, D.(states(sys)) .=> 0.0, Pair[], (0, 10.0))
+    prob = DAEProblem(sys, D.(unknowns(sys)) .=> 0.0, Pair[], (0, 10.0))
     sol = solve(prob, DFBDF())
     @test SciMLBase.successful_retcode(sol)
     @test all(sol[inertia1.w] .== 0)
@@ -67,7 +69,7 @@ end
     @named spring = Rotational.Spring(c = 1e4)
     @named damper = Damper(d = 10)
     @named inertia2 = Inertia(J = 4)
-    @named sine = Blocks.Sine(amplitude = amplitude, frequency = frequency)
+    @named sine = Blocks.Sine(amplitude = amplitude, frequency = frequency, output__unit = u"N*m")
 
     connections = [connect(sine.output, torque.tau)
         connect(torque.support, fixed.flange)
@@ -86,8 +88,8 @@ end
             sine,
         ])
     sys = structural_simplify(model)
-    prob = DAEProblem(sys, D.(states(sys)) .=> 0.0,
-        [D(D(inertia2.phi)) => 1.0; D.(states(model)) .=> 0.0], (0, 10.0))
+    prob = DAEProblem(sys, D.(unknowns(sys)) .=> 0.0,
+        [D(D(inertia2.phi)) => 1.0; D.(unknowns(model)) .=> 0.0], (0, 10.0))
     sol = solve(prob, DFBDF())
     @test SciMLBase.successful_retcode(sol)
 
@@ -117,8 +119,9 @@ end
     sys = structural_simplify(model)
 
     prob = ODEProblem(sys, Pair[], (0, 10.0))
-    sol = solve(prob, Rodas4())
+    sol = solve(prob, Rodas5())
     @test SciMLBase.successful_retcode(sol)
+    ### TODO
     @test sol(sol.t[end], idxs = inertia1.w)≈sol(sol.t[end], idxs = inertia2.w) rtol=0.1 # both inertias have same angular velocity after initial transient
 end
 
@@ -139,7 +142,7 @@ end
     @named spring = Spring(c = 1e4)
     @named inertia3 = Inertia(J = J_load)
     @named damper = Damper(d = damping)
-    @named sine = Blocks.Sine(amplitude = amplitude, frequency = frequency)
+    @named sine = Blocks.Sine(amplitude = amplitude, frequency = frequency, output__unit = u"N*m")
 
     connections = [connect(inertia1.flange_b, idealGear.flange_a)
         connect(idealGear.flange_b, inertia2.flange_a)
@@ -166,7 +169,7 @@ end
         ])
     @test_skip begin
         sys = structural_simplify(model) #key 7 not found
-        prob = ODAEProblem(sys, Pair[], (0, 1.0))
+        prob = ODEProblem(sys, Pair[], (0, 1.0))
         sol = solve(prob, Rodas4())
         @test SciMLBase.successful_retcode(sol)
     end
@@ -174,15 +177,18 @@ end
 end
 
 @testset "Stick-Slip" begin
-    @component function VelocityProfile(; name)
-        @named sine = Blocks.Sine(amplitude = 10, frequency = 0.1)
-        @named dz = Blocks.DeadZone(u_max = 2)
-        @named lim = Blocks.Limiter(y_max = 6)
-        @named output = Blocks.RealOutput()
-        connections = [connect(sine.output, dz.input)
+    @mtkmodel VelocityProfile begin
+        @components begin
+            sine = Blocks.Sine(amplitude = 10, frequency = 0.1, output__unit)
+            dz = Blocks.DeadZone(; u_max = 2, input.unit, output.unit)
+            lim = Blocks.Limiter(y_max = 6)
+            output = Blocks.RealOutput(; unit)
+        end
+        @equations begin
+            connect(sine.output, dz.input)
             connect(dz.output, lim.input)
-            connect(lim.output, output)]
-        ODESystem(connections, t, [], []; name = name, systems = [sine, dz, lim, output])
+            connect(lim.output, output)
+        end
     end
 
     @named fixed = Fixed()
@@ -191,8 +197,8 @@ end
     @named inertia = Inertia(J = 0.0001)
     @named friction = RotationalFriction(f = 0.001, tau_c = 20, w_brk = 0.06035,
         tau_brk = 25)
-    @named vel_profile = VelocityProfile()
-    @named source = Speed(use_support = false)
+    @named vel_profile = VelocityProfile(sine.output.unit = rad/u"s", output.unit = rad/u"s", dz.input.unit = u"N*m", dz.output.unit = rad/u"s", lim.output.unit = rad/u"s", lim.input.unit = rad/u"s")
+    @named source = Speed(use_support = false, w_ref__unit = rad/u"s")
     @named angle_sensor = AngleSensor()
 
     connections = [connect(vel_profile.output, source.w_ref)
@@ -214,7 +220,7 @@ end
             angle_sensor,
         ])
     sys = structural_simplify(model)
-    prob = DAEProblem(sys, D.(states(sys)) .=> 0.0, Pair[], (0, 10.0))
+    prob = DAEProblem(sys, D.(unknowns(sys)) .=> 0.0, Pair[], (0, 10.0))
 
     sol = solve(prob, DFBDF())
     @test SciMLBase.successful_retcode(sol)
@@ -261,7 +267,7 @@ end
     @test all(sol[rel_speed_sensor.w_rel.u] .== sol[speed_sensor.w.u])
     @test all(sol[torque_sensor.tau.u] .== -sol[inertia1.flange_b.tau])
 
-    prob = DAEProblem(sys, D.(states(sys)) .=> 0.0, Pair[], (0, 10.0))
+    prob = DAEProblem(sys, D.(unknowns(sys)) .=> 0.0, Pair[], (0, 10.0))
     sol = solve(prob, DFBDF())
     @test SciMLBase.successful_retcode(sol)
     @test all(sol[inertia1.w] .== 0)

@@ -32,12 +32,9 @@ Input signal acting as external torque on a flange
   - `use_support`
 """
 @mtkmodel Torque begin
-    @parameters begin
-        use_support
-    end
-    @extend (flange,) = partial_element = PartialElementaryOneFlangeAndSupport2(use_support = use_support)
+    @extend (flange,) = partial_element = PartialElementaryOneFlangeAndSupport2(; use_support)
     @components begin
-        tau = RealInput()
+        tau = RealInput(unit = u"N*m")
     end
     @equations begin
         flange.tau ~ -tau.u
@@ -62,7 +59,7 @@ Constant torque source
 - `tau_constant`: The constant torque applied by the source
 - `use_support`: Whether or not an internal support flange is added.
 """
-@mtkmodel ConstantTorque begin #(; name, tau_constant, use_support = false)
+@mtkmodel ConstantTorque begin
     @parameters begin
         tau_constant,
         [
@@ -72,16 +69,10 @@ Constant torque source
     end
     @extend flange, phi = partial_element = PartialTorque(; use_support = use_support)
     @variables begin
-        tau(t),
-        [
-            description = "Accelerating torque acting at flange (= -flange.tau)",
-            unit = u"N*m",
-        ]
-        w(t),
-        [
-            description = "Angular velocity of flange with respect to support",
-            unit = u"rad*s^-1",
-        ]
+        tau(t), [description = "Accelerating torque acting at flange (= -flange.tau)",
+            unit = u"N*m"]
+        w(t), [description = "Angular velocity of flange with respect to support",
+            unit = u"rad*s^-1"]
     end
     @equations begin
         w ~ D(phi)
@@ -110,17 +101,14 @@ Forced movement of a flange according to a reference angular velocity signal
   - `exact`: true/false exact treatment/filtering the input signal
   - `tau_filt`: [`rad/s`] if exact=false, Time constant of low-pass filter to filter input signal
 """
-@component function Speed(; name, use_support = false, exact = false, tau_filt = 50)
+@component function Speed(; name, use_support = false, exact = false, tau_filt = 50, w_ref__unit)
+    vars = []
     @named partial_element = PartialElementaryOneFlangeAndSupport2(use_support = use_support)
     @unpack flange, phi_support = partial_element
-    @named w_ref = RealInput()
-    @variables begin
-        function phi(t)
-            0.0, [description = "Angle of flange with respect to support", unit = u"rad"]
-        end
-        w(t) = 0.0, [description = "Angular velocity", unit = u"rad*s^-1"]
-        a(t) = 0.0, [description = "Angular acceleration", unit = u"rad*s^-2"]
-    end
+    @named w_ref = RealInput(; unit = w_ref__unit)
+    @variables phi(t) = 0.0 [description = "Angle of flange with respect to support", unit = u"rad"]
+    @variables w(t) = 0.0 [description = "Angular velocity", unit = u"rad/s"]
+    @variables a(t) = 0.0 [description = "Angular acceleration", unit = u"rad/s^2"]
     eqs = [phi ~ flange.phi - phi_support
         D(phi) ~ w]
     if exact
@@ -135,6 +123,6 @@ Forced movement of a flange according to a reference angular velocity signal
         push!(eqs, D(w) ~ a)
         push!(eqs, a ~ (w_ref.u - w) * tau_filt)
     end
-    return extend(ODESystem(eqs, t, [phi, w, a], pars; name = name, systems = [w_ref]),
+    return extend(ODESystem(eqs, t, vars, pars; name = name, systems = [w_ref]),
         partial_element)
 end

@@ -147,7 +147,7 @@ Initial magnetic flux flowing into the port_p can be set with `Phi` ([`Wb`])
 """
 @mtkmodel EddyCurrent begin
     @variables begin
-        Phi, [description = "Magnetic flux", unit = Wb]
+        Phi, [description = "Magnetic flux", unit = u"Wb"]
     end
     @parameters begin
         rho = 0.098e-6, [description = "Resistivity of flux tube material", unit = u"Ω*m"]

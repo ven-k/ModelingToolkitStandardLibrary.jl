@@ -1,7 +1,6 @@
 module FluxTubes
 using ModelingToolkit
 using ...Electrical: Pin
-import ...Wb
 using ...DynamicQuantities: @u_str
 
 @parameters t [unit = u"s"]

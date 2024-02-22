@@ -5,7 +5,9 @@ version = "2.1.1"
 
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
+DataInterpolations = "82cc6244-b520-54b8-b5a6-8a565e85f1d0"
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
+DynamicQuantities = "06fc5a27-2a28-4c7c-a15d-362465fb6821"
 IfElse = "615f187c-cbe4-4ef1-ba3b-2fcf58d6d173"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 ModelingToolkit = "961ee093-0014-501f-94e3-6117800e7a78"
@@ -14,18 +16,20 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 [compat]
 ChainRulesCore = "1"
 DiffEqBase = "6"
+DynamicQuantities = "0.11, 0.12"
 IfElse = "0.1"
-ModelingToolkit = "8.50"
+ModelingToolkit = "8,9"
 Symbolics = "4.9, 5"
 julia = "1.6"
 
 [extras]
 ControlSystemsBase = "aaaaaaaa-a6ca-5380-bf3e-84a91bcd477e"
 DataInterpolations = "82cc6244-b520-54b8-b5a6-8a565e85f1d0"
+DynamicQuantities = "06fc5a27-2a28-4c7c-a15d-362465fb6821"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["LinearAlgebra", "OrdinaryDiffEq", "SafeTestsets", "Test", "ControlSystemsBase", "DataInterpolations"]
+test = ["LinearAlgebra", "OrdinaryDiffEq", "SafeTestsets", "Test", "ControlSystemsBase", "DataInterpolations", "DynamicQuantities"]

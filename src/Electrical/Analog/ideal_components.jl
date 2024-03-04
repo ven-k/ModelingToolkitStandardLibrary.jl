@@ -243,16 +243,16 @@ Electromotoric force (electric/mechanic transformer)
 """
 @mtkmodel EMF begin
     @extend OnePort()
-    @components begin
-        flange = Flange()
-        support = Support()
-    end
     @parameters begin
         k, [description = "Transformation coefficient", unit = u"N*m/A"]
     end
     @variables begin
         phi(t) = 0.0, [description = "Rotation angle", unit = u"rad"]
         w(t) = 0.0, [description = "Angular velocity", unit = u"rad/s"]
+    end
+    @components begin
+        flange = Flange()
+        support = Support()
     end
     @equations begin
         phi ~ flange.phi - support.phi

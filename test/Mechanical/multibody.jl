@@ -1,13 +1,13 @@
 using ModelingToolkit
 using ModelingToolkitStandardLibrary.Mechanical.MultiBody2D
-using ModelingToolkitStandardLibrary.Mechanical.Translational
-using DifferentialEquations
+using ModelingToolkitStandardLibrary.Mechanical.TranslationalPosition
+using OrdinaryDiffEq
 # using Setfield
 using Test
 
 @named link1 = Link(; m = 1, l = 10, I = 84, g = -9.807)
 @named link2 = Link(; m = 1, l = 10, I = 84, g = -9.807, x1_0 = 10)
-@named cart = Mass(; m = 1, s_0 = 0)
+@named cart = Mass(; m = 1, s = 0)
 # @named force = SineForce(;amp=3e3, freq=15)
 @named fixed = Fixed()
 # @named m1 = Mass(;m=0.5)
@@ -21,6 +21,7 @@ eqs = [connect(link1.TX1, cart.flange) #, force.flange)
 @named model = ODESystem(eqs, t, [], []; systems = [link1, link2, cart, fixed])
 
 sys = structural_simplify(model)
+@test length(states(sys)) == 6
 
 # The below code does work...
 #=

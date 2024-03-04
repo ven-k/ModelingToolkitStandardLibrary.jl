@@ -52,7 +52,7 @@ eqs = [connect(P.output, C.input)
        connect(C.output, :plant_input, P.input)]
 sys = ODESystem(eqs, t, systems = [P, C], name = :feedback_system)
 
-matrices_S, _ = get_sensitivity(sys, :plant_input) # Compute the matrices of a state-space representation of the (input) sensitivity funciton.
+matrices_S, _ = get_sensitivity(sys, :plant_input) # Compute the matrices of a state-space representation of the (input) sensitivity function.
 matrices_T, _ = get_comp_sensitivity(sys, :plant_input)
 ```
 
@@ -450,10 +450,17 @@ end
 
 # Methods above are implemented in terms of linearization_function, the method below creates wrappers for linearize
 for f in [:get_sensitivity, :get_comp_sensitivity, :get_looptransfer]
-    @eval function $f(sys, ap, args...; loop_openings = nothing, kwargs...)
-        lin_fun, ssys = $(Symbol(string(f) * "_function"))(sys, ap, args...; loop_openings,
+    @eval function $f(sys,
+        ap,
+        args...;
+        loop_openings = nothing,
+        op = Dict(),
+        p = DiffEqBase.NullParameters(),
+        kwargs...)
+        lin_fun, ssys = $(Symbol(string(f) * "_function"))(sys, ap, args...; op, p,
+            loop_openings,
             kwargs...)
-        ModelingToolkit.linearize(ssys, lin_fun; kwargs...), ssys
+        ModelingToolkit.linearize(ssys, lin_fun; op, p, kwargs...), ssys
     end
 end
 
@@ -512,6 +519,11 @@ get_comp_sensitivity
     get_looptransfer(sys, ap_name::Symbol; kwargs)
 
 Compute the (linearized) loop-transfer function in analysis point `ap`, from `ap.out` to `ap.in`.
+
+!!! info "Negative feedback"
+
+    Feedback loops often use negative feedback, and the computed loop-transfer function will in this case have the negative feedback included. Standard analysis tools often assume a loop-transfer function without the negative gain built in, and the result of this function may thus need negation before use.
+
 
 !!! danger "Experimental"
 

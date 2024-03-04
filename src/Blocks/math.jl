@@ -24,11 +24,11 @@ end
 Gain.f(k; name) = Gain.f(; k, name)
 
 """
-    MatrixGain(K::AbstractArray; name)
+    MatrixGain(; K::AbstractArray, name)
 
 Output the product of a gain matrix with the input signal vector.
 
-# Parameters:
+# Structural parameters:
 
   - `K`: Matrix gain
 
@@ -50,11 +50,10 @@ Output the product of a gain matrix with the input signal vector.
         output = RealOutput(; nout = nout)
     end
     @equations begin
-        [(output.u[i] ~ sum(K[i, j] * input.u[j])) for j in 1:nin
+        [output.u[i] ~ sum(K[i, j] * input.u[j] for j in 1:nin)
          for i in 1:nout]...
     end
 end
-MatrixGain.f(K; name) = MatrixGain.f(; name, K)
 
 """
     Sum(; input__nin::Int, name)
@@ -222,15 +221,15 @@ If the given function is not composed of simple core methods (e.g. sin, abs, ...
   - `output`
 """
 @mtkmodel StaticNonLinearity begin
-    @parameters begin
+    @structural_parameters begin
         func
     end
     @extend u, y = siso = SISO()
     @equations begin
-        y ~ first(getdefault(func))(u)
+        y ~ func(u)
     end
 end
-StaticNonLinearity.f(func; name) = StaticNonLinearity.f(; name = name, func = [func])
+StaticNonLinearity.f(func; name) = StaticNonLinearity(; func, name)
 
 """
     Abs(; name)

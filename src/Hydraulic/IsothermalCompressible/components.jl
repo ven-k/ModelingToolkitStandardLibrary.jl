@@ -116,7 +116,8 @@ Variable length internal flow model of the fully developed incompressible flow f
         0
     end
 
-    eqs = [0 ~ port_a.dm + port_b.dm]
+    eqs = [0 ~ port_a.dm + port_b.dm
+        domain_connect(port_a, port_b)]
 
     if variable_length
         push!(eqs, Δp ~ ifelse(c > 0, shear + inertia, zero(c)))
@@ -302,6 +303,7 @@ end
     end
 
     eqs = [0 ~ port_a.dm + port_b.dm
+        domain_connect(port_a, port_b)
         dm ~ regRoot(2 * Δp * ρ / c) * x
         y ~ x]
 
@@ -495,7 +497,7 @@ dm ────►               │  │ area
     name)
     @assert(N>=0,
         "the Tube component must be defined with 0 or more segments (i.e. N>=0), found N=$N")
-    @assert (direction == +1)||(direction == -1) "direction arument must be +/-1, found $direction"
+    @assert (direction == +1)||(direction == -1) "direction argument must be +/-1, found $direction"
 
     #TODO: How to set an assert effective_length >= length ??
     pars = @parameters begin
@@ -549,7 +551,7 @@ dm ────►               │  │ area
         p_int,
         x_int = 0,
         area,
-        dead_volume = N == 0 ? area * x_max : 0,
+        dead_volume = N == 0 ? area * x_int : 0,
         Χ1 = N == 0 ? 1 : 0,
         Χ2 = 1)
 

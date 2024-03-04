@@ -1,33 +1,33 @@
 @connector function RealInput(; name, nin = 1, u_start = nin > 1 ? zeros(nin) : 0.0, unit = nothing)
     if nin == 1
         if unit !== nothing
-            @variables u(t)=u_start [
+            @variables _u(t)=u_start [
                 input = true,
                 description = "Inner variable in RealInput $name",
-                unit = unit
             ]
         else
-            @variables u(t)=u_start [
+            @variables _u(t)=u_start [
                 input = true,
                 description = "Inner variable in RealInput $name",
             ]
         end
     else
         if unit !== nothing
-            @variables u(t)[1:nin]=u_start [
+            @variables _u(t)[1:nin]=u_start [
                 input = true,
                 description = "Inner variable in RealInput $name",
                 unit = unit
             ]
         else
-            @variables u(t)[1:nin]=u_start [
+            @variables _u(t)[1:nin]=u_start [
                 input = true,
                 description = "Inner variable in RealInput $name",
             ]
         end
-        u = collect(u)
+        _u = collect(_u)
     end
-    ODESystem(Equation[], t, [u...], []; name = name)
+    equations = unit !== nothing ? [u ~ _u * unit] : Equation[]
+    ODESystem(equations, t, [u...], []; name = name)
 end
 @doc """
     RealInput(;name, nin, u_start)
@@ -48,7 +48,6 @@ Connector with one input signal of type Real.
             @variables u(t)=u_start [
                 output = true,
                 description = "Inner variable in RealOutput $name",
-                unit = unit
             ]
         else
             @variables u(t)=u_start [
@@ -61,7 +60,6 @@ Connector with one input signal of type Real.
             @variables u(t)[1:nout]=u_start [
                 output = true,
                 description = "Inner variable in RealOutput $name",
-                unit = unit
             ]
         else
             @variables u(t)[1:nout]=u_start [
@@ -71,7 +69,8 @@ Connector with one input signal of type Real.
             end
             u = collect(u)
     end
-    ODESystem(Equation[], t, [u...], []; name = name)
+    equations = unit !== nothing ? [u ~ _u / unit] : Equation[]
+    ODESystem(equations, t, [u...], []; name = name)
 end
 @doc """
     RealOutput(;name, nout, u_start)
@@ -106,8 +105,8 @@ Single input single output (SISO) continuous system block.
         y(t) = y_start, [description = "Output of SISO system"]
     end
     @components begin
-        input = RealInput(u_start = 0.0)
-        output = RealOutput(u_start = 0.0)
+        input = RealInput(; unit, u_start = u_start)
+        output = RealOutput(; unit, u_start = y_start)
     end
     @equations begin
         u ~ input.u

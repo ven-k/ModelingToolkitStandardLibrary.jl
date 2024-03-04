@@ -51,7 +51,7 @@ end
 
 @testset "Add" begin
     @named c1 = Constant(; k = 1)
-    @named c2 = Sine(; frequency = 1)
+    @named c2 = Sine(; frequency = 1, output__unit = u"s")
     @named add = Add(;)
     @named int = Integrator(; k = 1)
     @named model = ODESystem([
@@ -219,7 +219,7 @@ end
         (Exp, exp),
     ]
         @info "testing $block"
-        @named source = Sine(frequency = 1, amplitude = 0.5)
+        @named source = Sine(frequency = 1, amplitude = 0.5, output__unit = u"s")
         @named b = block()
         @named int = Integrator()
         @named model = ODESystem([
@@ -237,7 +237,7 @@ end
     # input must be positive
     for (block, func) in [(Sqrt, sqrt), (Log, log), (Log10, log10)]
         @info "testing $block"
-        @named source = Sine(; frequency = 1, offset = 2, amplitude = 0.5)
+        @named source = Sine(; frequency = 1, offset = 2, amplitude = 0.5, output__unit = u"s")
         @named b = block()
         @named int = Integrator()
         @named model = ODESystem([
@@ -254,8 +254,8 @@ end
 end
 
 @testset "Atan2" begin
-    @named c1 = Sine(; frequency = 1, offset = 2)
-    @named c2 = Sine(; frequency = 1, offset = 1)
+    @named c1 = Sine(; frequency = 1, offset = 2, output__unit = u"s")
+    @named c2 = Sine(; frequency = 1, offset = 1, output__unit = u"s")
     @named b = Atan2(;)
     @named int = Integrator(; k = 1)
     @named model = ODESystem([

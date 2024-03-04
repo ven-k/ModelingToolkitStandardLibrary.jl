@@ -16,7 +16,7 @@ See [OnePort](@ref)
 @mtkmodel Voltage begin
     @extend v, i = oneport = OnePort()
     @components begin
-        V = RealInput(unit = u"V")
+        V = RealInput()
     end
     @equations begin
         v ~ V.u

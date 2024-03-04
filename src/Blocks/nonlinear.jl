@@ -16,10 +16,10 @@ Limit the range of a signal.
   - `input`
   - `output`
 """
-@component function Limiter(; name, y_max, y_min = y_max > 0 ? -y_max : -Inf)
+@component function Limiter(; name, input__unit, output__unit, y_max, y_min = y_max > 0 ? -y_max : -Inf)
     @symcheck y_max ≥ y_min || throw(ArgumentError("`y_min` must be smaller than `y_max`"))
     m = (y_max + y_min) / 2
-    @named siso = SISO(u_start = m, y_start = m) # Default signals to center of saturation to minimize risk of saturation while linearizing etc.
+    @named siso = SISO(u_start = m, y_start = m, input__unit, output__unit) # Default signals to center of saturation to minimize risk of saturation while linearizing etc.
     @unpack u, y = siso
     pars = @parameters y_max=y_max [description = "Maximum allowed output of Limiter $name"] y_min=y_min [
         description = "Minimum allowed output of Limiter $name",
@@ -68,7 +68,7 @@ If the input is within `u_min` ... `u_max`, the output is zero. Outside of this 
         end
     end
 
-    @extend u, y = siso = SISO()
+    @extend u, y = siso = SISO(; input__unit, output__unit)
 
     @equations begin
         y ~ _dead_zone(u, u_min, u_max)

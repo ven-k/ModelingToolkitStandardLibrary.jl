@@ -129,16 +129,16 @@ Generate sine signal.
 
   - `output`
 """
+
 @component function Sine(; name,
     frequency,
     amplitude = 1,
     phase = 0,
     offset = 0,
     start_time = 0,
-    smooth = false,
-    output__unit = nothing)
-    @named output = RealOutput(; unit = output__unit)
-    pars = @parameters offset=offset start_time=start_time amplitude=amplitude frequency=frequency phase=phase
+    smooth = false)
+    @named output = RealOutput()
+    pars = @parameters t offset=offset start_time=start_time amplitude=amplitude frequency=frequency phase=phase
     equation = if smooth == false
         offset + ifelse(t < start_time, 0,
             amplitude * sin(2 * pi * frequency * (t - start_time) + phase))
@@ -182,7 +182,7 @@ Cosine signal.
     smooth = false,
     output__unit = nothing)
     @named output = RealOutput(; unit = output__unit)
-    pars = @parameters offset=offset start_time=start_time amplitude=amplitude frequency=frequency phase=phase
+    pars = @parameters offset=offset start_time=start_time [unit = u"s"] amplitude=amplitude frequency=frequency phase=phase
     equation = if smooth == false
         offset + ifelse(t < start_time, zero(t),
             amplitude * cos(2 * pi * frequency * (t - start_time) + phase))
@@ -213,7 +213,7 @@ Generate current time signal.
 """
 @component function ContinuousClock(; name, offset = 0, start_time = 0, output__unit = nothing)
     @named output = RealOutput(; unit = output__unit)
-    pars = @parameters offset=offset start_time=start_time
+    pars = @parameters offset=offset start_time=start_time [unit = u"s"]
     eqs = [
         output.u ~ offset + ifelse(t < start_time, zero(t), t - start_time),
     ]
@@ -247,7 +247,7 @@ Generate ramp signal.
     smooth = false,
     output__unit = nothing)
     @named output = RealOutput(; unit = output__unit)
-    pars = @parameters offset=offset start_time=start_time height=height duration=duration
+    pars = @parameters offset=offset start_time=start_time [unit = u"s"] height=height duration=duration
     equation = if smooth == false
         offset + ifelse(t < start_time, 0,
             ifelse(t < (start_time + duration), (t - start_time) * height / duration,
@@ -329,7 +329,7 @@ Generate step signal.
     smooth = 1e-5, output__unit = nothing)
     @named output = RealOutput(; unit = output__unit)
     duration_numeric = duration
-    pars = @parameters offset=offset start_time=start_time height=height duration=duration
+    pars = @parameters offset=offset start_time=start_time [unit = u"s"] height=height duration=duration
     equation = if smooth == false # use comparison in case smooth is a float
         offset + ifelse((start_time < t) & (t < start_time + duration), height, 0)
     else
@@ -376,8 +376,7 @@ Exponentially damped sine signal.
     phase = 0,
     offset = 0,
     start_time = 0,
-    smooth = false,
-    output__unit = nothing)
+    smooth = false)
     @named output = RealOutput(; unit = output__unit)
     pars = @parameters offset=offset start_time=start_time amplitude=amplitude frequency=frequency phase=phase damping=damping
 

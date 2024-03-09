@@ -1,6 +1,7 @@
 module ModelingToolkitStandardLibrary
 import Symbolics: unwrap
 using DynamicQuantities
+using DynamicQuantities: @register_unit
 
 """
   @symcheck J > 0 || throw(ArgumentError("Expected `J` to be positive"))
